@@ -2,7 +2,6 @@ from bs4 import BeautifulSoup
 import requests
 from time import sleep
 import csv
-import time
 
 TARGETS = [#'RUB', # Russian Ruble
            #'CAD', # Canadian Dollar
@@ -61,7 +60,7 @@ def main():
             if history:
                 write_values(history, nation)
         print('waiting')
-        time.sleep(10)
+        sleep(10)
 
 if __name__ == '__main__':
     main()
