@@ -32,8 +32,8 @@ def get_data(url=MAIN_STR):
         return result
 
 def get_listings(result):
-    cards = cards = [f'listing-card-list-item-{n}' for n in range(0,40)]
-    soup = BeautifulSoup(result, 'html.parser')
+    cards = [f'listing-card-list-item-{n}' for n in range(0,40)]
+    soup = BeautifulSoup(result.text, 'html.parser')
     listings = soup.find_all('li', attrs={'data-testid': cards})
     listing_lu = {n: listings[n].find_all('p', attrs={'data-testid': ['listing-price', 
                                                                       'listing-location', 
@@ -43,14 +43,69 @@ def get_listings(result):
     link_lu = {n: listings[n].find_all('a', attrs={'data-testid': ['listing-description', 
                                                                    'listing-link']}) for n in range(0, len(listings))}
     # link_lu[0][0]['href']
+    return listing_lu, link_lu
 
 
 
+link = 'https://www.kijiji.ca/v-apartments-condos/kitchener-waterloo/fantastic-2-bedroom-2-bathroom-for-rent-in-kitchener/1676802832'
+'''
+h = soup.find_all('h4')
+for _ in h:
+    print(_.find_all(string=True)[0])
 
+# hard to filter out the ul-li becuase ul are used in more than one place
 
+d = soup.find_all('dl')
+for _ in d:
+    print(_.find_all(string=True)[0])
+'''
+#this maps the dt to dl
 
+def get_l_details_dl(url=link):
+    '''
+    https://stackoverflow.com/questions/32475700/using-beautifulsoup-to-extract-specific-dl-and-dd-list-elements
+    VALIDATED
+    '''
+    response = get_data(url)
+    data = BeautifulSoup(response.text, 'html.parser')
+    d = None
+    if data:
+        d = data.find_all('dl')
+    k, v = [], []
+    for dl in d:
+        for dt in dl.find_all('dt'):
+            k.append(dt.text.strip())
+        for dd in dl.find_all('dd'):
+            v.append(dd.text.strip())
+    return dict(zip(k,v))
 
-
+def get_l_details_h4(url=link):
+    response = get_data(url)
+    data = BeautifulSoup(response.text, 'html.parser')
+    h = None
+    if data:
+        h = data.select('h4') # headings
+    else:
+        print('no headings')
+        return None
+    for h4 in h: # print the Heading
+        print(h4.text)
+        ul = h4.parent.select('ul') # check the parent
+        if len(ul) > 0: 
+            # Utilities uses SVG's in a UL
+            svg = ul[0].select('svg', attrs={'aria-label': True})
+            if svg: # we have labels
+                for tag in svg:
+                    print('-', tag['aria-label'])
+            # if li are present - iterate through them
+            li = ul[0].select('li')
+            if li and not svg:
+                for l in li:
+                    if len(l) > 0:
+                        print('-', l.text)
+            else:
+                # just one element ul
+                print('-', ul[0].text)
 
 
 
