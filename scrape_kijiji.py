@@ -59,8 +59,8 @@ def test_listing():
     data = parse_result(page)
     dl_features = get_l_details_dl(data)
     h4_features = get_l_details_h4(data)
-    t_details = get_l_title_details(data)
-    return dl_features, h4_details, t_details
+    t_features = get_l_title_details(data)
+    return dl_features, h4_features, t_features
 
 
 def get_listings(data):
