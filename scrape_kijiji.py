@@ -94,7 +94,12 @@ def get_l_details_dl(data):
     return dict(zip(k,v))
 
 def get_l_details_h4(data):
+    '''
+    Extract the listing features from the
+    individual listing
+    '''
     h = None
+    _struct = {}
     if data:
         h = data.select('h4') # headings
     else:
@@ -102,24 +107,34 @@ def get_l_details_h4(data):
         return None
     for h4 in h: # print the Heading
         print(h4.text)
+        heading = h4.text
+        _struct[heading] = []
         ul = h4.parent.select('ul') # check the parent
         if len(ul) > 0: 
             # Utilities uses SVG's in a UL
             svg = ul[0].select('svg', attrs={'aria-label': True})
             if svg: # we have labels
                 for tag in svg:
+                    _struct[heading].append(tag['aria-label'])
                     print('-', tag['aria-label'])
             # if li are present - iterate through them
             li = ul[0].select('li')
             if li and not svg:
                 for l in li:
                     if len(l) > 0:
+                        _struct[heading].append(l.text)
                         print('-', l.text)
             else:
                 # just one element ul
+                _struct[heading].append(ul[0].text)
                 print('-', ul[0].text)
+    return _struct
 
 def get_title_details(data):
+    '''
+    Extract the heading, price and address from
+    the individual listing page
+    '''
     details = ['price', 'util_headline',
                'title_str', 'addresss']
     detail_str = []
