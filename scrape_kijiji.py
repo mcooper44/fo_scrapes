@@ -110,7 +110,7 @@ def get_l_details_h4(data):
         print('no headings')
         return None
     for h4 in h: # print the Heading
-        print(h4.text)
+        #print(h4.text)
         heading = h4.text
         _struct[heading] = []
         ul = h4.parent.select('ul') # check the parent
@@ -120,25 +120,25 @@ def get_l_details_h4(data):
             if svg: # we have labels
                 for tag in svg:
                     _struct[heading].append(tag['aria-label'])
-                    print('-', tag['aria-label'])
+                    #print('-', tag['aria-label'])
             # if li are present - iterate through them
             li = ul[0].select('li')
             if li and not svg:
                 for l in li:
                     if len(l) > 0:
                         _struct[heading].append(l.text)
-                        print('-', l.text)
+                        #print('-', l.text)
             else:
                 # just one element ul
                 _struct[heading].append(ul[0].text)
-                print('-', ul[0].text)
+                #print('-', ul[0].text)
     return _struct
 
 
 def get_l_title_details(data):
     '''
-    Extract the heading, price and address from
-    the individual listing page
+    Extract the title, price, price note and address 
+    from the individual listing page
     '''
     details = ['price', 'util_headline',
                'title_str', 'addresss']
@@ -149,9 +149,14 @@ def get_l_title_details(data):
     if price:
         for s in price[0]:
             detail_str.append(s.text)
+    # add title string
     detail_str.append(price[0].parent.select('h1')[0].text)
+    # find address
     address = data.find_all('div', {'class': r_add})
-    detail_str = address[1].select('span')[0].text
+    detail_str.append(address[1].select('span')[0].text)
+    # add address
+    #detail_str.append(address[0].text)
+    # zip labels and values into a dictionary
     return dict(zip(details, detail_str))
 
 
