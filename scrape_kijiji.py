@@ -150,9 +150,9 @@ def get_l_title_details(data):
         for s in price[0]:
             detail_str.append(s.text)
     detail_str.append(price[0].parent.select('h1')[0].text)
-    address = _soup.find_all('div', {'class': r_add})
+    address = data.find_all('div', {'class': r_add})
     detail_str = address[1].select('span')[0].text
-    return dict(zip(details, detail_str)
+    return dict(zip(details, detail_str))
 
 
 
