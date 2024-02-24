@@ -23,7 +23,12 @@ AGENT = 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:122.0) Gecko/20100101 Firefo
 HEADER = {'User-Agent': AGENT}
 
 
-def get_data(url=MAIN_STR):
+def get_page(url=MAIN_STR):
+    '''
+    make a request to get the result
+    using the requests library
+    '''
+
     result = requests.get(url)
     if result.status_code != 200:
         print('no result')
@@ -31,10 +36,21 @@ def get_data(url=MAIN_STR):
     else:
         return result
 
-def get_listings(result):
+def parse_result(request):
+    '''
+    take the result created by the requests library
+    and parse it using Beautiful Soup, returning 
+    the soup object
+    '''
+    return BeautifulSoup(request.text, 'html.parser')
+
+
+def get_listings(data):
+    '''
+    parses the listing page of 40 results
+    '''
     cards = [f'listing-card-list-item-{n}' for n in range(0,40)]
-    soup = BeautifulSoup(result.text, 'html.parser')
-    listings = soup.find_all('li', attrs={'data-testid': cards})
+    listings = data.find_all('li', attrs={'data-testid': cards})
     listing_lu = {n: listings[n].find_all('p', attrs={'data-testid': ['listing-price', 
                                                                       'listing-location', 
                                                                       'listing-proximity', 
@@ -61,13 +77,11 @@ for _ in d:
 '''
 #this maps the dt to dl
 
-def get_l_details_dl(url=link):
+def get_l_details_dl(data):
     '''
     https://stackoverflow.com/questions/32475700/using-beautifulsoup-to-extract-specific-dl-and-dd-list-elements
     VALIDATED
     '''
-    response = get_data(url)
-    data = BeautifulSoup(response.text, 'html.parser')
     d = None
     if data:
         d = data.find_all('dl')
@@ -79,9 +93,7 @@ def get_l_details_dl(url=link):
             v.append(dd.text.strip())
     return dict(zip(k,v))
 
-def get_l_details_h4(url=link):
-    response = get_data(url)
-    data = BeautifulSoup(response.text, 'html.parser')
+def get_l_details_h4(data):
     h = None
     if data:
         h = data.select('h4') # headings
@@ -107,8 +119,20 @@ def get_l_details_h4(url=link):
                 # just one element ul
                 print('-', ul[0].text)
 
-
-
+def get_title_details(data):
+    details = ['price', 'util_headline',
+               'title_str', 'addresss']
+    detail_str = []
+    r_price = re.compile('priceWrapper')
+    r_add = re.compile('locationContainer')
+    price = data.find_all('div', {'class': r_price})
+    if price:
+        for s in price[0]:
+            detail_str.append(s.text)
+    detail_str.append(price[0].parent.select('h1')[0].text)
+    address = _soup.find_all('div', {'class': r_add})
+    detail_str = address[1].select('span')[0].text
+    return dict(zip(details, detail_str)
 
 
 
