@@ -25,6 +25,7 @@ HEADER = {'User-Agent': AGENT}
 
 link = 'https://www.kijiji.ca/v-apartments-condos/kitchener-waterloo/fantastic-2-bedroom-2-bathroom-for-rent-in-kitchener/1676802832'
 
+
 def get_page(url=MAIN_STR):
     '''
     make a request to get the result
@@ -38,6 +39,7 @@ def get_page(url=MAIN_STR):
     else:
         return result
 
+
 def parse_result(request):
     '''
     take the result created by the requests library
@@ -45,6 +47,20 @@ def parse_result(request):
     the soup object
     '''
     return BeautifulSoup(request.text, 'html.parser')
+
+
+def test_listing():
+    '''
+    grab a listing and test the functions
+    to parse the page and pull out the key
+    features we are looking for
+    '''
+    page = get_page(link)
+    data = parse_result(page)
+    dl_features = get_l_details_dl(data)
+    h4_features = get_l_details_h4(data)
+    t_details = get_l_title_details(data)
+    return dl_features, h4_details, t_details
 
 
 def get_listings(data):
@@ -64,8 +80,6 @@ def get_listings(data):
     return listing_lu, link_lu
 
 
-
-
 def get_l_details_dl(data):
     '''
     https://stackoverflow.com/questions/32475700/using-beautifulsoup-to-extract-specific-dl-and-dd-list-elements
@@ -81,6 +95,7 @@ def get_l_details_dl(data):
         for dd in dl.find_all('dd'):
             v.append(dd.text.strip())
     return dict(zip(k,v))
+
 
 def get_l_details_h4(data):
     '''
@@ -119,7 +134,8 @@ def get_l_details_h4(data):
                 print('-', ul[0].text)
     return _struct
 
-def get_title_details(data):
+
+def get_l_title_details(data):
     '''
     Extract the heading, price and address from
     the individual listing page
