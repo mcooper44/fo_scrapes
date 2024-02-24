@@ -22,6 +22,7 @@ AGENT = 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:122.0) Gecko/20100101 Firefo
 
 HEADER = {'User-Agent': AGENT}
 
+link = 'https://www.kijiji.ca/v-apartments-condos/kitchener-waterloo/fantastic-2-bedroom-2-bathroom-for-rent-in-kitchener/1676802832'
 
 def get_page(url=MAIN_STR):
     '''
@@ -63,19 +64,6 @@ def get_listings(data):
 
 
 
-link = 'https://www.kijiji.ca/v-apartments-condos/kitchener-waterloo/fantastic-2-bedroom-2-bathroom-for-rent-in-kitchener/1676802832'
-'''
-h = soup.find_all('h4')
-for _ in h:
-    print(_.find_all(string=True)[0])
-
-# hard to filter out the ul-li becuase ul are used in more than one place
-
-d = soup.find_all('dl')
-for _ in d:
-    print(_.find_all(string=True)[0])
-'''
-#this maps the dt to dl
 
 def get_l_details_dl(data):
     '''
