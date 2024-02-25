@@ -43,24 +43,29 @@ def get_page(url=MAIN_STR):
 def parse_result(request):
     '''
     take the result created by the requests library
-    and parse it using Beautiful Soup, returning 
+    and parse it using Beautiful Soup, returning
     the soup object
     '''
     return BeautifulSoup(request.text, 'html.parser')
 
 
-def test_listing():
+def test_listing(url=link):
     '''
     grab a listing and test the functions
     to parse the page and pull out the key
     features we are looking for
     '''
-    page = get_page(link)
+    page = get_page(url)
     data = parse_result(page)
     dl_features = get_l_details_dl(data)
     h4_features = get_l_details_h4(data)
     t_features = get_l_title_details(data)
-    return dl_features, h4_features, t_features
+    u_features = get_l_unit_type(data)
+    return {'dl': dl_features,
+            'h4': h4_features,
+            't': t_features,
+            'u': u_features,
+            'data': data}
 
 
 def get_listings(data):
@@ -69,12 +74,12 @@ def get_listings(data):
     '''
     cards = [f'listing-card-list-item-{n}' for n in range(0,40)]
     listings = data.find_all('li', attrs={'data-testid': cards})
-    listing_lu = {n: listings[n].find_all('p', attrs={'data-testid': ['listing-price', 
-                                                                      'listing-location', 
-                                                                      'listing-proximity', 
-                                                                      'listing-description', 
+    listing_lu = {n: listings[n].find_all('p', attrs={'data-testid': ['listing-price',
+                                                                      'listing-location',
+                                                                      'listing-proximity',
+                                                                      'listing-description',
                                                                       'listing-link']}) for n in range(0, len(listings))}
-    link_lu = {n: listings[n].find_all('a', attrs={'data-testid': ['listing-description', 
+    link_lu = {n: listings[n].find_all('a', attrs={'data-testid': ['listing-description',
                                                                    'listing-link']}) for n in range(0, len(listings))}
     # link_lu[0][0]['href']
     return listing_lu, link_lu
@@ -83,7 +88,10 @@ def get_listings(data):
 def get_l_details_dl(data):
     '''
     https://stackoverflow.com/questions/32475700/using-beautifulsoup-to-extract-specific-dl-and-dd-list-elements
-    VALIDATED
+    Most of the headings in the listing are in dl>dt>dd
+    Parking Included, Agreement Type, Move-In Date,
+    Pet Friendly, Size (sqft), Furnished, Air Conditioning,
+    Smoking Permitted
     '''
     d = None
     if data:
@@ -101,6 +109,9 @@ def get_l_details_h4(data):
     '''
     Extract the listing features from the
     individual listing
+    h4's list the following headings:
+    Wi-Fi and More, Appliances,
+    Personal Outdoor Space, Amenities
     '''
     h = None
     _struct = {}
@@ -114,7 +125,7 @@ def get_l_details_h4(data):
         heading = h4.text
         _struct[heading] = []
         ul = h4.parent.select('ul') # check the parent
-        if len(ul) > 0: 
+        if len(ul) > 0:
             # Utilities uses SVG's in a UL
             svg = ul[0].select('svg', attrs={'aria-label': True})
             if svg: # we have labels
@@ -137,7 +148,7 @@ def get_l_details_h4(data):
 
 def get_l_title_details(data):
     '''
-    Extract the title, price, price note and address 
+    Extract the title, price, price note and address
     from the individual listing page
     '''
     details = ['price', 'util_headline',
@@ -159,6 +170,20 @@ def get_l_title_details(data):
     # zip labels and values into a dictionary
     return dict(zip(details, detail_str))
 
-
+def get_l_unit_type(data):
+    '''
+    Extract unit type (house, 1 bedroom etc)
+    Bedrooms and # of bathrooms
+    '''
+    details = ['Unit_type', 'Bedrooms',
+               'Bathrooms']
+    detail_str = []
+    row = re.compile('unitRow')
+    label = re.compile('noLabelValue')
+    card = data.find_all('div', {'class':row})
+    span = card[0].find_all('span', {'class': label})
+    for d in span:
+        detail_str.append(d.text)
+    return dict(zip(details, detail_str))
 
 
