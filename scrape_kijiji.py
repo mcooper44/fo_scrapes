@@ -68,6 +68,16 @@ def test_listing(url=link):
             'data': data}
 
 
+def get_l_features(data):
+    dl_features = get_l_details_dl(data)
+    h4_features = get_l_details_h4(data)
+    t_features = get_l_title_details(data)
+    u_features = get_l_unit_type(data)
+    title = {**t_features, **u_features}
+    listing = {**dl_features, **h4_features}
+    return title, listing
+
+
 def get_listings(data):
     '''
     parses the listing page of 40 results
@@ -175,8 +185,8 @@ def get_l_unit_type(data):
     Extract unit type (house, 1 bedroom etc)
     Bedrooms and # of bathrooms
     '''
-    details = ['Unit_type', 'Bedrooms',
-               'Bathrooms']
+    details = ['unit_type', 'bedrooms',
+               'bathrooms']
     detail_str = []
     row = re.compile('unitRow')
     label = re.compile('noLabelValue')
