@@ -1,6 +1,8 @@
 import requests
 from bs4 import BeautifulSoup
 import re
+from dataclasses import dataclass
+
 
 # url is build from..
 # base + type + geo
@@ -93,6 +95,33 @@ def get_listings(data):
                                                                    'listing-link']}) for n in range(0, len(listings))}
     # link_lu[0][0]['href']
     return listing_lu, link_lu
+
+@dataclass
+class a_listing:
+    listing_id: str
+    address: str
+    price: str
+    unit_type: str
+    bedrooms: str
+    bathrooms: str
+    sqrft: str
+    headline: str
+    util_headline: str
+    attrs: dict # get_l_details_dl
+    perks: dict # get_l_details_h4
+
+    def get_base_str(self):
+        return [self.listing_id, self.address, self.price, self.unit_type,
+                self.bedrooms, self.bathrooms, self.sqrft]
+
+    def get_attributes(self):
+        return [self.attrs.get('Agreement Type', None),
+                self.attrs.get('Move-In Date', None),
+                self.attrs.get('Parking Included', None),
+                self.attrs.get('Furnished', None),
+                self.attrs.get('Smoking Permitted', None),
+                self.attrs.get('Air Conditioning', None),
+                self.attrs.get('Pet Friendly', None)]
 
 
 def get_l_details_dl(data):
