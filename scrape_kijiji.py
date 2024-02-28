@@ -19,13 +19,40 @@ ONE_BED_BASE = 'one-bedroom-basement/'
 # limits results to 23km radius from region centre
 SCOPE = 'c30349001l1700212?sort=dateDesc&radius=23.0&address=Kitchener%2C+Waterloo+Regional+Municipality%2C+ON&ll=43.4516395%2C-80.4925337'
 
-MAIN_STR = BASE + TYPE_r + GEO + SCOPE
+MAIN_STR ='https://www.kijiji.ca/b-apartments-condos/kitchener-waterloo/apartment__condo/c37l1700212a29276001'
 
 AGENT = 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:122.0) Gecko/20100101 Firefox/122.0'
 
 HEADER = {'User-Agent': AGENT}
 
 link = 'https://www.kijiji.ca/v-apartments-condos/kitchener-waterloo/fantastic-2-bedroom-2-bathroom-for-rent-in-kitchener/1676802832'
+
+
+class a_listing:
+    listing_id: str
+    address: str
+    price: str
+    unit_type: str
+    bedrooms: str
+    bathrooms: str
+    sqrft: str
+    headline: str
+    util_headline: str
+    attrs: dict # get_l_details_dl
+    perks: dict # get_l_details_h4
+
+    def get_base_str(self):
+        return [self.listing_id, self.address, self.price, self.unit_type,
+                self.bedrooms, self.bathrooms, self.sqrft]
+
+    def get_attributes(self):
+        return [self.attrs.get('Agreement Type', None),
+                self.attrs.get('Move-In Date', None),
+                self.attrs.get('Parking Included', None),
+                self.attrs.get('Furnished', None),
+                self.attrs.get('Smoking Permitted', None),
+                self.attrs.get('Air Conditioning', None),
+                self.attrs.get('Pet Friendly', None)]
 
 
 def get_page(url=MAIN_STR):
@@ -79,10 +106,22 @@ def get_l_features(data):
     listing = {**dl_features, **h4_features}
     return title, listing
 
+def get_links(data):
+    '''
+    takes a BeautifulSoup parsed page of listings and
+    return a list of links to other housing ads
+    '''
+    cards = [f'listing-card-list-item-{n}' for n in range(0,40)]
+    lstings = data.find_all('li', attrs={'data-testid': cards})
+    links = [lstings[n].find_all('a', attrs={'data-testid': ['listing-link']})[0]['href'] for n in range(0, len(lstings))]
+    return links
 
 def get_listings(data):
     '''
     parses the listing page of 40 results
+    returns the html listing as a dictionary with price,
+    location and promo copy stub,
+    as well as the link in a separate dict with the same key
     '''
     cards = [f'listing-card-list-item-{n}' for n in range(0,40)]
     listings = data.find_all('li', attrs={'data-testid': cards})
@@ -91,37 +130,12 @@ def get_listings(data):
                                                                       'listing-proximity',
                                                                       'listing-description',
                                                                       'listing-link']}) for n in range(0, len(listings))}
-    link_lu = {n: listings[n].find_all('a', attrs={'data-testid': ['listing-description',
-                                                                   'listing-link']}) for n in range(0, len(listings))}
+
+    link_lu = {n: listings[n].find_all('a', attrs={'data-testid':
+                                                   ['listing-link']}) for n in range(0, len(listings))}
     # link_lu[0][0]['href']
     return listing_lu, link_lu
 
-@dataclass
-class a_listing:
-    listing_id: str
-    address: str
-    price: str
-    unit_type: str
-    bedrooms: str
-    bathrooms: str
-    sqrft: str
-    headline: str
-    util_headline: str
-    attrs: dict # get_l_details_dl
-    perks: dict # get_l_details_h4
-
-    def get_base_str(self):
-        return [self.listing_id, self.address, self.price, self.unit_type,
-                self.bedrooms, self.bathrooms, self.sqrft]
-
-    def get_attributes(self):
-        return [self.attrs.get('Agreement Type', None),
-                self.attrs.get('Move-In Date', None),
-                self.attrs.get('Parking Included', None),
-                self.attrs.get('Furnished', None),
-                self.attrs.get('Smoking Permitted', None),
-                self.attrs.get('Air Conditioning', None),
-                self.attrs.get('Pet Friendly', None)]
 
 
 def get_l_details_dl(data):
