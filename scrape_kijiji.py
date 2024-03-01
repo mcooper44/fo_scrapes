@@ -55,6 +55,12 @@ class a_listing:
                 self.attrs.get('Pet Friendly', None)]
 
 
+def create_a_listing(lid, f, f2):
+    return a_listing(lid,f['address'],f['price'],f['unit_type'],\
+                     f['bedrooms'],f['bathrooms'],f2['sqrft'],\
+                     f['title_str'],f['util_headline'],f, f2)
+
+
 def get_page(url=MAIN_STR):
     '''
     make a request to get the result
@@ -80,7 +86,7 @@ def parse_result(request):
 
 def test_listing(url=link):
     '''
-    grab a listing and test the functions
+e   grab a listing and test the functions
     to parse the page and pull out the key
     features we are looking for
     '''
