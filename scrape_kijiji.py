@@ -21,9 +21,8 @@ SCOPE = 'c30349001l1700212?sort=dateDesc&radius=23.0&address=Kitchener%2C+Waterl
 
 MAIN_STR ='https://www.kijiji.ca/b-apartments-condos/kitchener-waterloo/apartment__condo/c37l1700212a29276001'
 
-AGENT = 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:122.0) Gecko/20100101 Firefox/122.0'
-
-HEADER = {'User-Agent': AGENT}
+HEADER = {'User-Agent': 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:122.0) Gecko/20100101 Firefox/122.0',
+         'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8'}
 
 link = 'https://www.kijiji.ca/v-apartments-condos/kitchener-waterloo/fantastic-2-bedroom-2-bathroom-for-rent-in-kitchener/1676802832'
 
@@ -61,7 +60,7 @@ def get_page(url=MAIN_STR):
     using the requests library
     '''
 
-    result = requests.get(url)
+    result = requests.get(url, headers=HEADER)
     if result.status_code != 200:
         print('no result')
         return None
