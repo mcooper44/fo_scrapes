@@ -157,29 +157,6 @@ def process_links(links, base='https://www.kijiji.ca'):
     return listings
 
 
-def get_listings_depreciated(data):
-    '''
-    ***Don't use this one - it is not needed***
-    parses the listing page of 40 results
-    returns the html listing as a dictionary with price,
-    location and promo copy stub,
-    as well as the link in a separate dict with the same key
-    '''
-    cards = [f'listing-card-list-item-{n}' for n in range(0,40)]
-    listings = data.find_all('li', attrs={'data-testid': cards})
-    listing_lu = {n: listings[n].find_all('p', attrs={'data-testid': ['listing-price',
-                                                                      'listing-location',
-                                                                      'listing-proximity',
-                                                                      'listing-description',
-                                                                      'listing-link']}) for n in range(0, len(listings))}
-
-    link_lu = {n: listings[n].find_all('a', attrs={'data-testid':
-                                                   ['listing-link']}) for n in range(0, len(listings))}
-    # link_lu[0][0]['href']
-    return listing_lu, link_lu
-
-
-
 def get_l_details_dl(data):
     '''
     https://stackoverflow.com/questions/32475700/using-beautifulsoup-to-extract-specific-dl-and-dd-list-elements
@@ -282,3 +259,30 @@ def get_l_unit_type(data):
     return dict(zip(details, detail_str))
 
 
+def main():
+    page = get_page()
+    data = parse_result(page)
+    link_list = get_links(data)
+    listing_objs = process_links(link_list)
+
+
+def get_listings_depreciated(data):
+    '''
+    ***Don't use this one - it is not needed***
+    parses the listing page of 40 results
+    returns the html listing as a dictionary with price,
+    location and promo copy stub,
+    as well as the link in a separate dict with the same key
+    '''
+    cards = [f'listing-card-list-item-{n}' for n in range(0,40)]
+    listings = data.find_all('li', attrs={'data-testid': cards})
+    listing_lu = {n: listings[n].find_all('p', attrs={'data-testid': ['listing-price',
+                                                                      'listing-location',
+                                                                      'listing-proximity',
+                                                                      'listing-description',
+                                                                      'listing-link']}) for n in range(0, len(listings))}
+
+    link_lu = {n: listings[n].find_all('a', attrs={'data-testid':
+                                                   ['listing-link']}) for n in range(0, len(listings))}
+    # link_lu[0][0]['href']
+    return listing_lu, link_lu
