@@ -55,12 +55,6 @@ class a_listing:
                 self.attrs.get('Pet Friendly', None)]
 
 
-def create_a_listing(lid, f, f2):
-    return a_listing(lid,f['address'],f['price'],f['unit_type'],\
-                     f['bedrooms'],f['bathrooms'],f2['sqrft'],\
-                     f['title_str'],f['util_headline'],f, f2)
-
-
 def get_page(url=MAIN_STR):
     '''
     make a request to get the result
@@ -112,6 +106,7 @@ def get_l_features(data):
     listing = {**dl_features, **h4_features}
     return title, listing
 
+
 def get_links(data):
     '''
     takes a BeautifulSoup parsed page of listings and
@@ -121,6 +116,37 @@ def get_links(data):
     lstings = data.find_all('li', attrs={'data-testid': cards})
     links = [lstings[n].find_all('a', attrs={'data-testid': ['listing-link']})[0]['href'] for n in range(0, len(lstings))]
     return links
+
+
+def create_a_listing(lid, f, f2):
+    '''
+    instantiates the a_listing dataclass
+    '''
+    return a_listing(lid,f['address'],f['price'],f['unit_type'],\
+                     f['bedrooms'],f['bathrooms'],f2['sqrft'],\
+                     f['title_str'],f['util_headline'],f, f2)
+
+
+def get_l_key(link):
+    return link.split('/')[-1]
+
+
+def process_links(links, base='https://www.kijiji.ca'):
+    '''
+    take a list of listing links from a search
+    and scrape the features from the list of listings
+    and return a list of the feature objects (a_listing)
+    '''
+    listings = []
+    for link in links:
+        key = get_l_key(link)
+        page = get_page(f'{base}link')
+        data = parse_result(page)
+        f, f2 = get_l_features(data)
+        l = create_a_listing(key, f, f2)
+        listings.append(l)
+    return listings
+
 
 def get_listings(data):
     '''
