@@ -7,7 +7,7 @@ from dataclasses import dataclass
 # url is build from..
 # base + type + geo
 # other components are used to narrow scope
-BASE = 'https://www.kijiji.ca/'
+BASE = 'https://www.kijiji.ca'
 # pick one type
 TYPE_r = 'b-for-rent/' # base
 TYPE_c = 'b-apartments-condos/' # long term rent
@@ -80,7 +80,7 @@ def parse_result(request):
 
 def test_listing(url=link):
     '''
-e   grab a listing and test the functions
+    grab a listing and test the functions
     to parse the page and pull out the key
     features we are looking for
     '''
@@ -98,6 +98,11 @@ e   grab a listing and test the functions
 
 
 def get_l_features(data):
+    '''
+    extract the details from the listing and return
+    two dictionaries with the title details
+    and the feature set that is relevant
+    '''
     dl_features = get_l_details_dl(data)
     h4_features = get_l_details_h4(data)
     t_features = get_l_title_details(data)
@@ -110,7 +115,7 @@ def get_l_features(data):
 def get_links(data):
     '''
     takes a BeautifulSoup parsed page of listings and
-    return a list of links to other housing ads
+    return a list of links to individual housing rental ads
     '''
     cards = [f'listing-card-list-item-{n}' for n in range(0,40)]
     lstings = data.find_all('li', attrs={'data-testid': cards})
@@ -128,6 +133,10 @@ def create_a_listing(lid, f, f2):
 
 
 def get_l_key(link):
+    '''
+    parses the url and extracts the id
+    that the site uses to identify the listing
+    '''
     return link.split('/')[-1]
 
 
@@ -148,8 +157,9 @@ def process_links(links, base='https://www.kijiji.ca'):
     return listings
 
 
-def get_listings(data):
+def get_listings_depreciated(data):
     '''
+    ***Don't use this one - it is not needed***
     parses the listing page of 40 results
     returns the html listing as a dictionary with price,
     location and promo copy stub,
