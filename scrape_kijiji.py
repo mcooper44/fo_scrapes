@@ -1,8 +1,10 @@
 import requests
 from bs4 import BeautifulSoup
-import re
 from dataclasses import dataclass
-
+import re
+from time import sleep
+import csv
+from random import randint
 
 # url is build from..
 # base + type + geo
@@ -26,7 +28,7 @@ HEADER = {'User-Agent': 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:122.0) Gecko
 
 link = 'https://www.kijiji.ca/v-apartments-condos/kitchener-waterloo/fantastic-2-bedroom-2-bathroom-for-rent-in-kitchener/1676802832'
 
-
+@dataclass
 class a_listing:
     listing_id: str
     address: str
@@ -34,24 +36,28 @@ class a_listing:
     unit_type: str
     bedrooms: str
     bathrooms: str
-    sqrft: str
+    sqft: str
     headline: str
     util_headline: str
     attrs: dict # get_l_details_dl
     perks: dict # get_l_details_h4
 
     def get_base_str(self):
-        return [self.listing_id, self.address, self.price, self.unit_type,
-                self.bedrooms, self.bathrooms, self.sqrft]
+        return  [self.listing_id, self.address,
+                self.price, self.unit_type,
+                self.bedrooms, self.bathrooms,
+                self.sqft, self.perks.get('Agreement Type', 'N/A'),
+                self.perks.get('Parking Included', 'N/A'),
+                self.perks.get('Air Conditioning','N/A')]
 
     def get_attributes(self):
-        return [self.attrs.get('Agreement Type', None),
-                self.attrs.get('Move-In Date', None),
-                self.attrs.get('Parking Included', None),
-                self.attrs.get('Furnished', None),
-                self.attrs.get('Smoking Permitted', None),
-                self.attrs.get('Air Conditioning', None),
-                self.attrs.get('Pet Friendly', None)]
+        return [self.perks.get('Agreement Type', None),
+                self.perks.get('Move-In Date', None),
+                self.perks.get('Parking Included', None),
+                self.perks.get('Furnished', None),
+                self.perks.get('Smoking Permitted', None),
+                self.perks.get('Air Conditioning', None),
+                self.perks.get('Pet Friendly', None)]
 
 
 def get_page(url=MAIN_STR):
@@ -60,6 +66,8 @@ def get_page(url=MAIN_STR):
     using the requests library
     '''
 
+    print('getting page:')
+    print(url)
     result = requests.get(url, headers=HEADER)
     if result.status_code != 200:
         print('no result')
@@ -74,6 +82,7 @@ def parse_result(request):
     and parse it using Beautiful Soup, returning
     the soup object
     '''
+    print('result recieved - parsing data...')
     return BeautifulSoup(request.text, 'html.parser')
 
 
@@ -119,6 +128,7 @@ def get_links(data):
     cards = [f'listing-card-list-item-{n}' for n in range(0,40)]
     lstings = data.find_all('li', attrs={'data-testid': cards})
     links = [lstings[n].find_all('a', attrs={'data-testid': ['listing-link']})[0]['href'] for n in range(0, len(lstings))]
+    print(f'parsed {len(links)} links')
     return links
 
 
@@ -126,8 +136,10 @@ def create_a_listing(lid, f, f2):
     '''
     instantiates the a_listing dataclass
     '''
+    print(f'creating a listing for {lid}')
+
     return a_listing(lid,f['address'],f['price'],f['unit_type'],\
-                     f['bedrooms'],f['bathrooms'],f2['sqrft'],\
+                     f['bedrooms'],f['bathrooms'],f2['Size (sqft)'],\
                      f['title_str'],f['util_headline'],f, f2)
 
 
@@ -147,12 +159,20 @@ def process_links(links, base='https://www.kijiji.ca'):
     '''
     listings = []
     for link in links:
-        key = get_l_key(link)
-        page = get_page(f'{base}link')
+        target = f'{base}{link}'
+        key = get_l_key(target)
+        print(target)
+        page = get_page(target)
         data = parse_result(page)
         f, f2 = get_l_features(data)
+        print(f)
+        print(f2)
         l = create_a_listing(key, f, f2)
+        write_csv('housing_list.csv',l.get_base_str()) 
         listings.append(l)
+        print(','.join(l.get_base_str()))
+        interval = 3 + randint(0,4)
+        sleep(interval)
     return listings
 
 
@@ -200,9 +220,12 @@ def get_l_details_h4(data):
             # Utilities uses SVG's in a UL
             svg = ul[0].select('svg', attrs={'aria-label': True})
             if svg: # we have labels
-                for tag in svg:
-                    _struct[heading].append(tag['aria-label'])
-                    #print('-', tag['aria-label'])
+                try:
+                    for tag in svg:
+                        _struct[heading].append(tag['aria-label'])
+                        #print('-', tag['aria-label'])
+                except:
+                    pass
             # if li are present - iterate through them
             li = ul[0].select('li')
             if li and not svg:
@@ -223,7 +246,7 @@ def get_l_title_details(data):
     from the individual listing page
     '''
     details = ['price', 'util_headline',
-               'title_str', 'addresss']
+               'title_str', 'address']
     detail_str = []
     r_price = re.compile('priceWrapper')
     r_add = re.compile('locationContainer')
@@ -240,6 +263,7 @@ def get_l_title_details(data):
     #detail_str.append(address[0].text)
     # zip labels and values into a dictionary
     return dict(zip(details, detail_str))
+
 
 def get_l_unit_type(data):
     '''
@@ -258,30 +282,19 @@ def get_l_unit_type(data):
     return dict(zip(details, detail_str))
 
 
+def write_csv(file_name, line):
+    with open(file_name, 'a', newline='') as csvfile:
+        writer = csv.writer(csvfile, delimiter=',')
+        writer.writerow(line)
+
+
 def main():
+    listing_file = 'housing_list.csv'
     page = get_page()
     data = parse_result(page)
     link_list = get_links(data)
     listing_objs = process_links(link_list)
-
-
-def get_listings_depreciated(data):
-    '''
-    ***Don't use this one - it is not needed***
-    parses the listing page of 40 results
-    returns the html listing as a dictionary with price,
-    location and promo copy stub,
-    as well as the link in a separate dict with the same key
-    '''
-    cards = [f'listing-card-list-item-{n}' for n in range(0,40)]
-    listings = data.find_all('li', attrs={'data-testid': cards})
-    listing_lu = {n: listings[n].find_all('p', attrs={'data-testid': ['listing-price',
-                                                                      'listing-location',
-                                                                      'listing-proximity',
-                                                                      'listing-description',
-                                                                      'listing-link']}) for n in range(0, len(listings))}
-
-    link_lu = {n: listings[n].find_all('a', attrs={'data-testid':
-                                                   ['listing-link']}) for n in range(0, len(listings))}
-    # link_lu[0][0]['href']
-    return listing_lu, link_lu
+    
+    #for l in listing_objs:
+    #    l_str = l.get_base_str()
+    #    write_csv(listing_file, l.get_base_str())
