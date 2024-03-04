@@ -7,26 +7,16 @@ import csv
 from random import randint
 
 # url is build from..
-# base + type + geo
-# other components are used to narrow scope
 BASE = 'https://www.kijiji.ca'
-# pick one type
-TYPE_r = 'b-for-rent/' # base
-TYPE_c = 'b-apartments-condos/' # long term rent
-# pick one city
-GEO = 'kitchener-waterloo/'
-# pick target
-ONE_BED_BASE = 'one-bedroom-basement/'
-
-# limits results to 23km radius from region centre
-SCOPE = 'c30349001l1700212?sort=dateDesc&radius=23.0&address=Kitchener%2C+Waterloo+Regional+Municipality%2C+ON&ll=43.4516395%2C-80.4925337'
 
 MAIN_STR ='https://www.kijiji.ca/b-apartments-condos/kitchener-waterloo/apartment__condo/c37l1700212a29276001'
+
+# for testing functions for individual listings
+link = 'https://www.kijiji.ca/v-apartments-condos/kitchener-waterloo/fantastic-2-bedroom-2-bathroom-for-rent-in-kitchener/1676802832'
 
 HEADER = {'User-Agent': 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:122.0) Gecko/20100101 Firefox/122.0',
          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8'}
 
-link = 'https://www.kijiji.ca/v-apartments-condos/kitchener-waterloo/fantastic-2-bedroom-2-bathroom-for-rent-in-kitchener/1676802832'
 
 @dataclass
 class a_listing:
