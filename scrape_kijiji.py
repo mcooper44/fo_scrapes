@@ -5,11 +5,15 @@ import re
 from time import sleep
 import csv
 from random import randint
+from datetime import datetime
 
 # url is build from..
 BASE = 'https://www.kijiji.ca'
+TARGET = '/b-apartments-condos/kitchener-waterloo/apartment__condo/'
+END = 'c37l1700212a29276001' # not sure what this is for - but it is essential
+PAGE = 'page-'
+MAIN_STR = 'https://www.kijiji.ca/b-apartments-condos/kitchener-waterloo/apartment__condo/c37l1700212a29276001'
 
-MAIN_STR ='https://www.kijiji.ca/b-apartments-condos/kitchener-waterloo/apartment__condo/c37l1700212a29276001'
 
 # for testing functions for individual listings
 link = 'https://www.kijiji.ca/v-apartments-condos/kitchener-waterloo/fantastic-2-bedroom-2-bathroom-for-rent-in-kitchener/1676802832'
@@ -55,7 +59,6 @@ def get_page(url=MAIN_STR):
     make a request to get the result
     using the requests library
     '''
-
     print('getting page:')
     print(url)
     result = requests.get(url, headers=HEADER)
@@ -127,7 +130,6 @@ def create_a_listing(lid, f, f2):
     instantiates the a_listing dataclass
     '''
     print(f'creating a listing for {lid}')
-
     return a_listing(lid,f['address'],f['price'],f['unit_type'],\
                      f['bedrooms'],f['bathrooms'],f2['Size (sqft)'],\
                      f['title_str'],f['util_headline'],f, f2)
@@ -141,7 +143,7 @@ def get_l_key(link):
     return link.split('/')[-1]
 
 
-def process_links(links, base='https://www.kijiji.ca'):
+def process_links(links, csv_file='housing_list.csv', base='https://www.kijiji.ca'):
     '''
     take a list of listing links from a search
     and scrape the features from the list of listings
@@ -155,13 +157,15 @@ def process_links(links, base='https://www.kijiji.ca'):
         page = get_page(target)
         data = parse_result(page)
         f, f2 = get_l_features(data)
+        print('f')
         print(f)
+        print('f2')
         print(f2)
         l = create_a_listing(key, f, f2)
-        write_csv('housing_list.csv',l.get_base_str()) 
+        write_csv(csv_file, l.get_base_str())
         listings.append(l)
         print(','.join(l.get_base_str()))
-        interval = 3 + randint(0,4)
+        interval = 3 + randint(1,10)
         sleep(interval)
     return listings
 
@@ -275,16 +279,26 @@ def get_l_unit_type(data):
 def write_csv(file_name, line):
     with open(file_name, 'a', newline='') as csvfile:
         writer = csv.writer(csvfile, delimiter=',')
-        writer.writerow(line)
+        t = str(datetime.now())
+        writer.writerow(line.append(t))
 
+
+def generate_url_list(n):
+    u = [MAIN_STR]
+    for i in range(2, n):
+        p = f'PAGE{i}/'
+        s = BASE + TARGET + PAGE + END
+        u.append(s)
+    return u
 
 def main():
     listing_file = 'housing_list.csv'
-    page = get_page()
-    data = parse_result(page)
-    link_list = get_links(data)
-    listing_objs = process_links(link_list)
-    
-    #for l in listing_objs:
-    #    l_str = l.get_base_str()
-    #    write_csv(listing_file, l.get_base_str())
+    url_list = generate_url_list(18)
+    for url in url_list:
+        page = get_page()
+        data = parse_result(page)
+        link_list = get_links(data)
+        listing_objs = process_links(link_list)
+        print('processed {len(listing_objs)} links')
+        print('taking a nap')
+        time.sleep(30)
