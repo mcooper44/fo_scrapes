@@ -5,7 +5,7 @@ import re
 from time import sleep
 import csv
 from random import randint
-from datetime import datetime
+from datetime import date
 import time
 
 # url is build from..
@@ -77,9 +77,11 @@ def parse_result(request):
     and parse it using Beautiful Soup, returning
     the soup object
     '''
-    print('result recieved - parsing data...')
-    return BeautifulSoup(request.text, 'html.parser')
-
+    if request:
+        print('result recieved - parsing data...')
+        return BeautifulSoup(request.text, 'html.parser')
+    else:
+        raise 'No data.  Request failed.'
 
 def test_listing(url=link):
     '''
@@ -131,7 +133,7 @@ def create_a_listing(lid, f, f2):
     '''
     instantiates the a_listing dataclass
     '''
-    print(f'creating a listing for {lid}')
+    #print(f'creating a listing for {lid}')
     return a_listing(lid,f['address'],f['price'],f['unit_type'],\
                      f['bedrooms'],f['bathrooms'],f2['Size (sqft)'],\
                      f['title_str'],f['util_headline'],f, f2)
@@ -164,11 +166,12 @@ def process_links(links, csv_file='housing_list.csv', base='https://www.kijiji.c
         #print('f2')
         #print(f2)
         l = create_a_listing(key, f, f2)
-        write_csv(csv_file, l.get_base_str())
+        out = l.get_base_str() + [str(date.today())] 
+        write_csv(csv_file, out)
         listings.append(l)
-        print(','.join(l.get_base_str()))
+        #print(','.join(l.get_base_str()))
         interval = 3 + randint(1,10)
-        sleep(interval)
+        #sleep(interval)
     return listings
 
 
@@ -277,17 +280,28 @@ def get_l_unit_type(data):
 
 
 def write_csv(file_name, line):
+    '''
+    write a line to file_name - this function
+    will append a line to the file and is called
+    to write out the list of strings with the listing
+    feature
+    '''
     with open(file_name, 'a', newline='') as csvfile:
         writer = csv.writer(csvfile, delimiter=',')
-        t = str(datetime.now())
         writer.writerow(line)
 
 
 def generate_url_list(n):
+    '''
+    generates the list of urls to page through
+    and strip links out of
+    the structure of the url is to append PAGE
+    between TARGET and END after page 1
+    '''
     u = [MAIN_STR]
     for i in range(2, n):
-        p = f'PAGE{i}/'
-        s = BASE + TARGET + PAGE + END
+        p = f'{PAGE}{i}/'
+        s = BASE + TARGET + p + END
         u.append(s)
     return u
 
@@ -295,10 +309,11 @@ def main():
     listing_file = H_FILE
     url_list = generate_url_list(PAGES)
     for url in url_list:
+        print(url)
         page = get_page()
         data = parse_result(page)
         link_list = get_links(data)
         listing_objs = process_links(link_list)
-        print('processed {len(listing_objs)} links')
-        print('taking a nap')
-        time.sleep(30)
+        print(f'processed {len(listing_objs)} links')
+        print('taking a nap for 30 seconds')
+        time.sleep(10)
