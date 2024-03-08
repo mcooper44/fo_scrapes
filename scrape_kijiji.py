@@ -251,13 +251,22 @@ def get_l_title_details(data):
     r_add = re.compile('locationContainer')
     price = data.find_all('div', {'class': r_price})
     if price:
-        for s in price[0]:
-            detail_str.append(s.text)
+        try:
+            for s in price[0]:
+                detail_str.append(s.text)
+        except:
+            detail_str.append('price error')
     # add title string
-    detail_str.append(price[0].parent.select('h1')[0].text)
+    try:
+        detail_str.append(price[0].parent.select('h1')[0].text)
+    except:
+        detail_str.append('title error')
     # find address
     address = data.find_all('div', {'class': r_add})
-    detail_str.append(address[1].select('span')[0].text)
+    try:
+        detail_str.append(address[1].select('span')[0].text)
+    except:
+        detail_str.append('address error')
     # zip labels and values into a dictionary
     return dict(zip(details, detail_str))
 
