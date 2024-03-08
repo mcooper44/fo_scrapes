@@ -6,6 +6,7 @@ from time import sleep
 import csv
 from random import randint
 from datetime import datetime
+import time
 
 # url is build from..
 BASE = 'https://www.kijiji.ca'
@@ -13,13 +14,14 @@ TARGET = '/b-apartments-condos/kitchener-waterloo/apartment__condo/'
 END = 'c37l1700212a29276001' # not sure what this is for - but it is essential
 PAGE = 'page-'
 MAIN_STR = 'https://www.kijiji.ca/b-apartments-condos/kitchener-waterloo/apartment__condo/c37l1700212a29276001'
-
-
 # for testing functions for individual listings
 link = 'https://www.kijiji.ca/v-apartments-condos/kitchener-waterloo/fantastic-2-bedroom-2-bathroom-for-rent-in-kitchener/1676802832'
 
 HEADER = {'User-Agent': 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:122.0) Gecko/20100101 Firefox/122.0',
          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8'}
+
+H_FILE = 'housing_list.csv'
+PAGES = 18
 
 
 @dataclass
@@ -157,10 +159,10 @@ def process_links(links, csv_file='housing_list.csv', base='https://www.kijiji.c
         page = get_page(target)
         data = parse_result(page)
         f, f2 = get_l_features(data)
-        print('f')
-        print(f)
-        print('f2')
-        print(f2)
+        #print('f')
+        #print(f)
+        #print('f2')
+        #print(f2)
         l = create_a_listing(key, f, f2)
         write_csv(csv_file, l.get_base_str())
         listings.append(l)
@@ -203,7 +205,7 @@ def get_l_details_h4(data):
     if data:
         h = data.select('h4') # headings
     else:
-        print('no headings')
+        #print('no headings')
         return None
     for h4 in h: # print the Heading
         #print(h4.text)
@@ -253,8 +255,6 @@ def get_l_title_details(data):
     # find address
     address = data.find_all('div', {'class': r_add})
     detail_str.append(address[1].select('span')[0].text)
-    # add address
-    #detail_str.append(address[0].text)
     # zip labels and values into a dictionary
     return dict(zip(details, detail_str))
 
@@ -280,7 +280,7 @@ def write_csv(file_name, line):
     with open(file_name, 'a', newline='') as csvfile:
         writer = csv.writer(csvfile, delimiter=',')
         t = str(datetime.now())
-        writer.writerow(line.append(t))
+        writer.writerow(line)
 
 
 def generate_url_list(n):
@@ -292,8 +292,8 @@ def generate_url_list(n):
     return u
 
 def main():
-    listing_file = 'housing_list.csv'
-    url_list = generate_url_list(18)
+    listing_file = H_FILE
+    url_list = generate_url_list(PAGES)
     for url in url_list:
         page = get_page()
         data = parse_result(page)
