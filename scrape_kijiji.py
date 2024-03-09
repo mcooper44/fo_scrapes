@@ -319,7 +319,7 @@ def main():
     url_list = generate_url_list(PAGES)
     for url in url_list:
         print(url)
-        page = get_page()
+        page = get_page(url)
         data = parse_result(page)
         link_list = get_links(data)
         listing_objs = process_links(link_list)
